@@ -1,18 +1,22 @@
 # DevOps
 
-#### Why should we run the container with a flag -e to give the environment variables?
+### Why should we run the container with a flag -e to give the environment variables?
 
 Running a container with the `-e` flag allows you to pass environment variables, which helps configure the container's behavior without modifying its code. This enables dynamic settings like database credentials or API keys during runtime.
 
+---
+---
 
-#### Why do we need a volume to be attached to our postgres container?
+### Why do we need a volume to be attached to our postgres container?
 
 We attach a volume to the PostgreSQL container to persist database data, ensuring it is not lost when the container is stopped or removed. This allows the database to maintain its state across container restarts.
 
+---
+---
 
-#### Database documentation
+### Database documentation
 
-Dockerfile:
+#### Dockerfile:
 ```
 FROM postgres:14.1-alpine
 
@@ -25,7 +29,7 @@ ENV POSTGRES_DB=db \
 COPY ./my-init-scripts/ /docker-entrypoint-initdb.d/
 ```
 
-Essential commands:
+#### Essential commands:
 
 `docker build -t <YOUR_USERNAME>/database`
 
@@ -35,8 +39,10 @@ Essential commands:
 
 `docker run -p "8090:8080" --net=app-network --name=adminer -d adminer`
 
+---
+---
 
-#### Why do we need a multistage build? And explain each step of this dockerfile.
+### Why do we need a multistage build? And explain each step of this dockerfile.
 
 A multistage build in Docker separates the build and runtime environments, leading to smaller, more efficient, and secure images. This technique is especially useful when building Java applications that require a JDK for compilation but only need a JRE for execution.
 
@@ -83,4 +89,102 @@ ENTRYPOINT java -jar myapp.jar
 # This runs the JAR file using the Java runtime inside the container.
 ```
 
+---
+---
 
+### Why do we need a reverse proxy?
+
+A reverse proxy enhances security by hiding backend servers and controlling client access. It enables load balancing, distributing traffic across multiple servers for better performance and scalability. It can also handle SSL termination, simplifying secure connections. Additionally, reverse proxies offer caching for faster response times and act as a single entry point, simplifying client interactions with multiple backend services.
+
+---
+---
+
+### Why is docker-compose so important?
+
+Docker Compose is important because it makes it easy to manage multiple containers at once using just one YAML file. It helps to define all the services, networks, and volumes your app needs. With Compose, you can start or stop all your containers with a single command, making everything faster and simpler. Plus, it ensures that your setup is the same in development and production, so you avoid surprises when you deploy. It’s a huge time-saver for working with complex apps!
+
+---
+---
+
+### Document docker-compose most important commands. Document your docker-compose file.
+
+Build the services:
+`docker-compose build`
+
+Start the services: 
+`docker-compose up`<br>
+Starts all the services in the background, builds them if necessary, and attaches the logs.
+
+Stop the services:
+`docker-compose stop`<br>
+Stops the running services but keeps the containers.
+
+Stop and remove containers, networks, and volumes:
+`docker-compose down`
+
+View logs:
+`docker-compose logs`
+
+Check the status of services:
+`docker-compose ps`
+
+Rebuild and restart the services:
+`docker-compose up --build`
+
+---
+
+#### Docker-compose.yml Overview
+
+This file defines a multi-container Docker application with three services: `backend`, `database`, and `httpd`, all connected via a custom network `my-network`.
+
+#### 1. Backend Service
+
+- **build:**
+  - **context:** The path to the build directory (`./simpleapi`).
+  - **dockerfile:** The Dockerfile to use (`Dockerfile`).
+- **networks:**
+  - Specifies the custom network (`my-network`) for communication with other services.
+- **depends_on:**
+  - Specifies a dependency on the `database` service and waits until the `database` service is healthy before starting.
+
+
+#### 2. Database Service
+
+- **build:**
+  - **context:** The build context for the database service (`./Database`).
+  - **dockerfile:** The Dockerfile to use (`Dockerfile`).
+- **networks:**
+  - Uses the custom network (`my-network`) to communicate with other services.
+- **volumes:**
+  - Maps a local directory (`./Database/postgresql/data`) to the PostgreSQL data directory inside the container (`/var/lib/postgresql/data`).
+- **healthcheck:**
+  - Ensures the service is healthy by using the `pg_isready` command to check database readiness:
+    - **test:** Executes a command inside the container to check if PostgreSQL is ready.
+    - **interval:** How frequently to perform the health check (every 10 seconds).
+    - **retries:** How many times to retry the check before marking the service unhealthy (5 times).
+    - **timeout:** How long to wait for each health check (5 seconds).
+
+
+#### 3. HTTPD (Frontend) Service
+
+- **build:**
+  - **context:** The build directory for the frontend service (`./Frontend`).
+  - **dockerfile:** The Dockerfile to use (`Dockerfile`).
+- **ports:**
+  - Maps port 80 on the host to port 80 inside the container.
+- **networks:**
+  - Connects to the custom network (`my-network`).
+- **depends_on:**
+  - Specifies a dependency on the `backend` service, ensuring it starts only after the backend is ready.
+
+
+#### 4. Networks
+
+- **my-network:**
+  - Defines a custom bridge network called `my-network` that connects all the services. The `bridge` driver is the default network type, which isolates containers within this network and allows them to communicate with each other.
+
+
+This setup creates a connected system where:
+- `httpd` (the frontend) interacts with `backend`.
+- `backend` relies on the `database`.
+- The custom network ensures seamless communication between the services.
