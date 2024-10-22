@@ -10,11 +10,8 @@ services:
   backend:
     build:
       context: ./simpleapi
-      dockerfile: Dockerfile
     ports:
       - "8080:8080"
-    env_file:
-      - .env
     environment:
       - DB_URL=${DATABASE_URL}
       - DB_USERNAME=${DATABASE_USER}
@@ -28,9 +25,6 @@ services:
   database:
     build:
       context: ./Database
-      dockerfile: Dockerfile
-    env_file:
-      - .env
     environment:
       POSTGRES_USER: ${DATABASE_USER}
       POSTGRES_PASSWORD: ${DATABASE_PASSWORD}
@@ -50,7 +44,6 @@ services:
   httpd:
     build:
       context: ./Frontend
-      dockerfile: Dockerfile
     ports:
       - "80:80"
     networks:
