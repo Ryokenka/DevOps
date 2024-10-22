@@ -133,64 +133,97 @@ Rebuild and restart the services:
 
 ---
 
-#### Docker-compose.yml Overview
+### Docker-compose Overview
 
 This file defines a multi-container Docker application with three services: `backend`, `database`, and `httpd`, all connected via a custom network `my-network`.
 
-#### 1. Backend Service
+#### 1. Adminer Service
 
-- **build:**
-  - **context:** The path to the build directory (`./simpleapi`).
-  - **dockerfile:** The Dockerfile to use (`Dockerfile`).
-- **networks:**
-  - Specifies the custom network (`my-network`) for communication with other services.
-- **depends_on:**
-  - Specifies a dependency on the `database` service and waits until the `database` service is healthy before starting.
+- **image**: Uses the `adminer` image, which provides a database management tool.
+- **ports**:
+  - Maps port 8090 on the host to port 8080 inside the container, allowing access to the Adminer UI via `http://localhost:8090`.
+- **networks**:
+  - Connects to the custom network (`my-network`), allowing it to interact with other services (such as the database).
 
+#### 2. Backend Service
 
-#### 2. Database Service
+- **build**:
+  - The context is set to `./simpleapi`, indicating that the `Dockerfile` for the backend is located in the `simpleapi` directory.
+- **ports**:
+  - Maps port 8080 on the host to port 8080 inside the container for backend API access.
+- **environment**:
+  - Passes necessary environment variables like `DB_URL`, `DB_USERNAME`, and `DB_PASSWORD` from `.env` or the runtime environment.
+- **networks**:
+  - Connects to the custom network (`my-network`) for communication with other services.
+- **depends_on**:
+  - Depends on the `database` service. The `service_healthy` condition ensures that the backend will only start when the database is healthy.
 
-- **build:**
-  - **context:** The build context for the database service (`./Database`).
-  - **dockerfile:** The Dockerfile to use (`Dockerfile`).
-- **networks:**
-  - Uses the custom network (`my-network`) to communicate with other services.
-- **volumes:**
-  - Maps a local directory (`./Database/postgresql/data`) to the PostgreSQL data directory inside the container (`/var/lib/postgresql/data`).
-- **healthcheck:**
-  - Ensures the service is healthy by using the `pg_isready` command to check database readiness:
-    - **test:** Executes a command inside the container to check if PostgreSQL is ready.
-    - **interval:** How frequently to perform the health check (every 10 seconds).
-    - **retries:** How many times to retry the check before marking the service unhealthy (5 times).
-    - **timeout:** How long to wait for each health check (5 seconds).
+#### 3. Database Service
 
-
-#### 3. HTTPD (Frontend) Service
-
-- **build:**
-  - **context:** The build directory for the frontend service (`./Frontend`).
-  - **dockerfile:** The Dockerfile to use (`Dockerfile`).
-- **ports:**
-  - Maps port 80 on the host to port 80 inside the container.
-- **networks:**
+- **build**:
+  - The context is set to `./Database`, indicating that the `Dockerfile` for the database is located in the `Database` directory.
+- **environment**:
+  - Environment variables `POSTGRES_USER`, `POSTGRES_PASSWORD`, and `POSTGRES_DB` are passed, usually coming from `.env` or runtime inputs.
+- **ports**:
+  - Maps port 5432 on the host to port 5432 inside the container for PostgreSQL database access.
+- **networks**:
   - Connects to the custom network (`my-network`).
-- **depends_on:**
-  - Specifies a dependency on the `backend` service, ensuring it starts only after the backend is ready.
+- **volumes**:
+  - A volume is attached to persist database data in `/var/lib/postgresql/data`, ensuring data persistence even when the container is stopped or removed.
+- **healthcheck**:
+  - The health check ensures the database service is ready by running the command `pg_isready` with user and database parameters. It checks every 10 seconds with a maximum of 5 retries, timing out after 5 seconds.
 
+#### 4. HTTPD (Frontend) Service
 
-#### 4. Networks
+- **build**:
+  - The context is set to `./Frontend`, indicating that the `Dockerfile` for the frontend is located in the `Frontend` directory.
+- **ports**:
+  - Maps port 80 on the host to port 80 inside the container, making the frontend available at `http://localhost`.
+- **networks**:
+  - Connects to the custom network (`my-network`).
+- **depends_on**:
+  - Depends on the `backend` service, ensuring it starts after the backend is ready.
 
-- **my-network:**
-  - Defines a custom bridge network called `my-network` that connects all the services. The `bridge` driver is the default network type, which isolates containers within this network and allows them to communicate with each other.
+#### 5. Networks
 
+- **my-network**:
+  - Defines a custom bridge network (`my-network`) that connects all the services, allowing communication between them.
 
-This setup creates a connected system where:
-- `httpd` (the frontend) interacts with `backend`.
-- `backend` relies on the `database`.
-- The custom network ensures seamless communication between the services.
+#### 6. Volumes
+
+- **database**:
+  - A volume is created for the database to ensure persistent storage for PostgreSQL data.
 
 ---
 ---
+
+### How to publish images on Dockerhub?
+
+This section provides the necessary commands to build, tag, and push Docker images to DockerHub.
+
+#### 1. Build and Tag the Docker Images
+
+For each service, you'll need to build and tag the images before pushing them to DockerHub.
+```bash
+docker build -t <YOUR_DOCKERHUB_USERNAME>/<YOUR_IMAGE_NAME>:1.0 ./<YOUR_REPOSITORY>
+```
+Or if the image is already built:
+```bash
+docker tag <YOUR_IMAGE_NAME> ryokenka/<YOUR_IMAGE_NAME>:1.0
+```
+
+#### 2. Push the Docker Images to DockerHub
+
+Once the images are built and tagged, push them to your DockerHub repository.
+
+First login:
+```bash
+docker login
+```
+Then you can push the image with:
+```bash
+docker push <YOUR_DOCKERHUB_USERNAME>/<YOUR_IMAGE_NAME>:1.0
+```
 
 ### Why do we put our images into an online repo?
 
