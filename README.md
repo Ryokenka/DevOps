@@ -188,3 +188,16 @@ This setup creates a connected system where:
 - `httpd` (the frontend) interacts with `backend`.
 - `backend` relies on the `database`.
 - The custom network ensures seamless communication between the services.
+
+---
+---
+
+### Why do we put our images into an online repo?
+
+We put Docker images in an online repo so we can easily share them with teammates and keep things consistent across different computers. It helps us manage different versions of our app, so we can switch between them if needed. The repo also acts as a backup in case something goes wrong locally. Plus, it makes deployment to servers or the cloud simpler. Finally, having the images online with some documentation makes it easier to understand and use later.
+
+
+### Images for this project:
+[Database](https://hub.docker.com/layers/ryokenka/tp-01-database/1.0/images/sha256:0c029ff66357d02d27ecb68442a1370932e1bce215913fbbb31c0d660f1460a5?uuid=D8C6B495-B9D3-40CE-B30D-107ECB100590)<br>
+[Backend](https://hub.docker.com/layers/ryokenka/tp-01-backend/1.0/images/sha256:0c9068df49a244f6f116dcd2058ebfca822fb8f1be57e4d6ea3c9fa9b05a9515?uuid=D8C6B495-B9D3-40CE-B30D-107ECB100590)<br>
+[Frontend](https://hub.docker.com/layers/ryokenka/tp-01-frontend/1.0/images/sha256:68d3c72af271ac2a7ec3798b73ec74441a3c7ba2ef590995073eee9b50f16e1b?uuid=D8C6B495-B9D3-40CE-B30D-107ECB100590)<br>

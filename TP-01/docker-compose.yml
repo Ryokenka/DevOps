@@ -1,12 +1,24 @@
 version: '3.7'
 
 services:
+  adminer:
+    image: adminer
+    ports:
+      - "8090:8080"
+    networks:
+      - my-network
   backend:
     build:
       context: ./simpleapi
       dockerfile: Dockerfile
     ports:
       - "8080:8080"
+    env_file:
+      - .env
+    environment:
+      - DB_URL=${DATABASE_URL}
+      - DB_USERNAME=${DATABASE_USER}
+      - DB_PASSWORD=${DATABASE_PASSWORD}
     networks:
     - my-network
     depends_on:
@@ -22,15 +34,15 @@ services:
     environment:
       POSTGRES_USER: ${DATABASE_USER}
       POSTGRES_PASSWORD: ${DATABASE_PASSWORD}
-      POSTGRES_DB: ${DATABASE_NAME}
+      POSTGRES_DB: ${DATABASE_DB}
     ports:
       - "5432:5432"
     networks:
       - my-network
     volumes:
-      - ./Database/postgresql/data:/var/lib/postgresql/data
+      - database:/var/lib/postgresql/data
     healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -U usr -d db" ]
+      test: [ "CMD-SHELL", "pg_isready -U ${DATABASE_USER} -d ${DATABASE_DB}" ]
       interval: 10s
       retries: 5
       timeout: 5s
@@ -49,3 +61,6 @@ services:
 networks:
   my-network:
     driver: bridge
+
+volumes:
+    database:
